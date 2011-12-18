@@ -6,19 +6,28 @@
 
 #include <windows.h>
 #include <windowsx.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <tchar.h>
-#include <stdio.h>
-#include <math.h>
-#include <ddraw.h>
-#include "DirectDraw.h"
+//#include <stdio.h>
+//#include <math.h>
+#include <d3d9.h>
+
+// include the Direct3D Library file
+#pragma comment (lib, "d3d9.lib")
 
 // Defines
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-// Global variables
+// Global declarations
+LPDIRECT3D9 d3d;	// pointer to Direct3D interface
+LPDIRECT3DDEVICE9 d3ddev;	// pointer to the device class
+
+//function prototypes
+void initD3D(HWND hWnd);	// stes up and initializes Direct3D
+void render_frame(void);	// renders a single frame
+void cleanD3D(void);		// closes Direct3D and releases memory
 
 // The main window class name.
 static TCHAR szWindowClass[] = _T("win32app");
@@ -38,7 +47,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				   int nCmdShow)
 {
 	WNDCLASSEX wcex;
-	
+
+	ZeroMemory(&wcex, sizeof(WNDCLASSEX));	
 
 	wcex.cbSize			= sizeof(WNDCLASSEX);
 	wcex.style			= CS_HREDRAW | CS_VREDRAW;
@@ -91,8 +101,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	// hWnd: the value returned from CreateWindow
 	// nCmdShow: the fourth parameter from WinMain
 	// Game initialization goes here
-	ShowWindow(hWnd,
-		nCmdShow);
+	ShowWindow(hWnd,nCmdShow);
+	initD3D(hWnd);
 	UpdateWindow(hWnd);
 
 	// Main message loop:
@@ -108,9 +118,14 @@ int WINAPI WinMain(HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 
+		render_frame();
+
 		// main game processing goes here
 	}
 
+	// clean up DirectX
+	cleanD3D();
+	
 	return (int) msg.wParam;	
 
 }
@@ -166,3 +181,49 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 	return (DefWindowProc(hWnd, message, wParam, lParam));
 
 }
+
+//To do: write a wraper for this section
+
+//this function prepares Direct3D for use
+void initD3D(HWND hWnd)
+{
+    d3d = Direct3DCreate9(D3D_SDK_VERSION);    // d3d interface
+
+    D3DPRESENT_PARAMETERS d3dpp;    // create a struct to hold various device information
+
+    ZeroMemory(&d3dpp, sizeof(d3dpp));    // clear out the struct for use
+    d3dpp.Windowed = TRUE;    // program windowed, not fullscreen
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;    // discard old frames
+    d3dpp.hDeviceWindow = hWnd;    // set the window to be used by Direct3D
+
+    // create a device class using this information and information from the d3dpp stuct
+    d3d->CreateDevice(D3DADAPTER_DEFAULT,
+                      D3DDEVTYPE_HAL,
+                      hWnd,
+                      D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+                      &d3dpp,
+                      &d3ddev);
+}
+
+// this is the function used to render a single frame
+void render_frame(void)
+{
+    // clear the window to a deep blue
+    d3ddev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 40, 100), 1.0f, 0);
+
+    d3ddev->BeginScene();    // begins the 3D scene
+
+    // do 3D rendering on the back buffer here
+
+    d3ddev->EndScene();    // ends the 3D scene
+
+    d3ddev->Present(NULL, NULL, NULL, NULL);    // displays the created frame
+}
+
+// this is the function that cleans up Direct3D and COM
+void cleanD3D(void)
+{
+    d3ddev->Release();    // close and release the 3D device
+    d3d->Release();    // close and release Direct3D
+}
+

@@ -2,6 +2,7 @@
 //         Set up DirectX
 
 #define WIN32_LEAN_AND_MEAN
+#define STRICT
 
 #include <windows.h>
 #include <windowsx.h>
@@ -9,6 +10,8 @@
 #include <tchar.h>
 #include <stdio.h>
 #include <math.h>
+#include <ddraw.h>
+#include "DirectDraw.h"
 
 // Defines
 
